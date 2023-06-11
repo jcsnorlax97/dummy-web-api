@@ -35,20 +35,34 @@ spec:
     port: 80
     targetPort: 8000
 ---
-apiVersion: networking.k8s.io/v1
-kind: Ingress
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
 metadata:
-  name: dwa-ingress
+  name: dwa-gateway
 spec:
-  ingressClassName: nginx
-  rules:
-  - host: "localhost"
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: dwa-service
-            port:
-              number: 80
+  selector:
+    istio: ingressgateway
+  servers:
+  - hosts:
+    - "*"
+    port:
+      number: 80
+      name: http
+      protocol: HTTP
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: dwa-virtualservice
+spec:
+  hosts:
+  - "*"
+  gateways:
+  - dwa-gateway
+  http:
+  - match:
+    - uri:
+        prefix: /
+    route:
+    - destination:
+        host: dwa-service
